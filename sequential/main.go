@@ -6,57 +6,46 @@ import (
 )
 
 type Result struct {
-	num   int
-	label string
-}
-
-// producer — sends numbers 1..10 into jobs, then closes
-func producer(jobs chan<- int) {
-	for i := 1; i <= 10; i++ {
-		jobs <- i
-	}
-	close(jobs)
-}
-
-// consumer — reads from jobs, classifies, sends to results
-func consumer(jobs <-chan int, results chan<- Result, wg *sync.WaitGroup) {
-	defer wg.Done()
-	for n := range jobs { // exits when jobs is closed
-		label := "odd"
-		if n%2 == 0 {
-			label = "even"
-		}
-		results <- Result{n, label}
-	}
+	num  int
+	kind string
 }
 
 func main() {
-	jobs := make(chan int, 10)
-	results := make(chan Result, 10)
+	oddArr := []int{1, 3, 5, 7}
+	evenArr := []int{2, 4, 6, 8}
 
-	// start producer
-	go producer(jobs)
+	oddTurn := make(chan struct{})
+	evenTurn := make(chan struct{})
 
-	// start 2 consumers
 	var wg sync.WaitGroup
-	for i := 0; i < 2; i++ {
-		wg.Add(1)
-		go consumer(jobs, results, &wg)
-	}
+	wg.Add(2)
 
-	// close results once both consumers are done
 	go func() {
-		wg.Wait()
-		close(results)
+		defer wg.Done()
+
+		for _, n := range oddArr {
+			<-oddTurn
+			fmt.Println(Result{n, "odd"})
+			evenTurn <- struct{}{}
+		}
 	}()
 
-	// collect and sort by number
-	output := make([]Result, 10)
-	for r := range results {
-		output[r.num-1] = r
-	}
+	go func() {
+		defer wg.Done()
 
-	for _, r := range output {
-		fmt.Printf("%d → %s\n", r.num, r.label)
-	}
+		for _, n := range evenArr {
+			<-evenTurn
+			fmt.Println(Result{n, "even"})
+
+			// Don't signal odd after the last even number
+			if n != evenArr[len(evenArr)-1] {
+				oddTurn <- struct{}{}
+			}
+		}
+	}()
+
+	// Start with odd
+	oddTurn <- struct{}{}
+
+	wg.Wait()
 }
