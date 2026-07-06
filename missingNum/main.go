@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 func main() {
-	arr := []int{0, 2, 3, 4, 1}
+	arr := []int{0, 2, 2, 3, 4, 1}
 	length := len(arr)
 	for i := 0; i < length; i++ {
 		for j := 0; j < length-i-1; j++ {
