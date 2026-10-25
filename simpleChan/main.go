@@ -16,8 +16,11 @@ func main() {
 
 	}()
 	go func() {
-		for {
-			fmt.Println(<-ch)
+		// for {
+		// 	fmt.Println(<-ch)
+		// }
+		for v := range ch {
+			fmt.Println(v)
 		}
 	}()
 	time.Sleep(time.Second)
