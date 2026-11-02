@@ -10,7 +10,7 @@ func evalRPN(tokens []string) int {
 	stack := []int{}
 	for _, token := range tokens {
 		switch token {
-		case " + ", " - ", " * ", " / ":
+		case "+", "-", "*", "/":
 			// Pop last two operands
 			b := stack[len(stack)-1]
 			a := stack[len(stack)-2]
